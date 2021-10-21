@@ -5,11 +5,14 @@ int G = 11; // Green pin of RGB led
 int B = 10; // Blue pin of RGB led
 int nemDegeri; //Current readed humidity
 int nemSensorPin = A0; // humidity sensor pin
-
-int delayTime = 100;  //initial delay time
+#define VOLTAGE 1
 
 LiquidCrystal lcd(8,7,6,5,4,3);  //initiliaze lcd screen
 
+void loadColors();
+void lightLed(int r, int g, int b);
+void makeSound(int delayTime);
+void stopSound(int delayTime);
 
 void setup() 
 {
@@ -21,7 +24,7 @@ void setup()
   pinMode(B,OUTPUT);
   lcd.begin(16,2); //start lcd screen
   lcd.print("Loading...");
-  delay(1000);
+  loadColors();
 }
 void loop() {
   nemDegeri = analogRead(nemSensorPin);
@@ -34,28 +37,46 @@ void loop() {
   lcd.setCursor(0,1); //go to new line
   lcd.print(buffer); //print humidity per cent
   if(nemDegeri>60){  //if percent above 60 it means plant not needs any water
-      analogWrite(R,0);  //show a red color
-      analogWrite(G,255);
-      analogWrite(B,255);
-      digitalWrite(buzzerPin,HIGH); //sound instantly to not add water
-      delay(100);
-      digitalWrite(buzzerPin,LOW);
-      delay(100);
+      lightLed(0,255,255); //red color
+      makeSound(100);
     }
   else if(nemDegeri>=50 && nemDegeri<=60){ // %50-%60 is good for plants
-      analogWrite(R,255);
-      analogWrite(G,0);  //green color
-      analogWrite(B,255);
-      digitalWrite(buzzerPin,HIGH);  //make a calmer sound
-      delay(1000);
-      digitalWrite(buzzerPin,LOW);
-      delay(1000);
+      lightLed(255,0,255); //green color
+      makeSound(1000);      //make a calmer sound
     }
    else{
-    analogWrite(R,255);  //if below %50 just a blue color
-    analogWrite(G,255);
-    analogWrite(B,0);
-    digitalWrite(buzzerPin,LOW); //and not sound buzzer
-    delay(200);
+    lightLed(255,255,0); //blue color
+    stopSound(200); //and not sound buzzer
    }
 }
+
+void stopSound(int delayTime){
+  digitalWrite(buzzerPin,!VOLTAGE); 
+  delay(delayTime);
+}
+
+void lightLed(int r, int g, int b){
+  analogWrite(R,r);
+  analogWrite(G,g);  
+  analogWrite(B,b);
+}
+
+void makeSound(int delayTime){
+  digitalWrite(buzzerPin,VOLTAGE);  
+  delay(delayTime);
+  digitalWrite(buzzerPin,!VOLTAGE);
+  delay(delayTime);
+}
+
+void loadColors(){
+  for(int r=0; r<=3; r++){
+    for(int g=0; g<=3; g++){
+      for(int b=0; b<=3; b++){
+        lightLed(r*85,g*85,b*85);
+        delay(30);
+      }
+    }
+  }
+  lightLed(0,0,0);
+}
+
